@@ -12,7 +12,7 @@
           <router-link :title="lang('suggestions')" :to="suggestionsUri(localItem)" v-if="localItem.tmdb_id" class="has-suggestion">
             <i class="icon-suggest"></i>
           </router-link>
-          <span class="is-on-watchlist" :title="lang('add to watchlist')" v-if="auth && localItem.rating == null && ! rated" @click="addToWatchlist(localItem)">
+          <span class="is-on-watchlist" :title="lang('add to watchlist')" v-if="auth && localItem.rating == null && ! localItem.watchlist && ! rated" @click="addToWatchlist(localItem)">
             <i class="icon-watchlist"></i>
           </span>
           <span class="is-on-watchlist" :title="lang('remove from watchlist')" v-if="auth && localItem.watchlist && ! rated" @click="removeItem()">
@@ -28,6 +28,13 @@
 
         <!--<span v-if="auth && localItem.rating == null && ! rated" class="add-to-watchlist" @click="addToWatchlist(localItem)">{{ lang('add to watchlist') }}</span>-->
         <!--<span v-if="auth && localItem.watchlist && ! rated" class="remove-from-watchlist" @click="removeItem()">{{ lang('remove from watchlist') }}</span>-->
+        <span v-if="auth && ! rated"
+              class="watching-now-toggle"
+              :class="{active: localItem.watching_now}"
+              title="Watching now"
+              @click="toggleWatchingNow()">
+          <i></i>
+        </span>
         <span v-if="auth && ! localItem.tmdb_id" class="edit-item" @click="editItem()">Edit</span>
 
         <router-link :to="{ name: `subpage-${localItem.media_type}`, params: { tmdbId: localItem.tmdb_id, slug: localItem.slug }}">
@@ -48,6 +55,12 @@
           <i class="item-has-src" v-if="hasSrc"></i>
           {{ localItem.title }}
         </router-link>
+        <span class="watchlist-text-btn" v-if="auth && localItem.rating == null && ! localItem.watchlist && ! rated" @click="addToWatchlist(localItem)">
+          {{ lang('add to watchlist') }}
+        </span>
+        <span class="watchlist-text-btn remove" v-if="auth && localItem.watchlist && ! rated" @click="removeItem()">
+          {{ lang('remove from watchlist') }}
+        </span>
         <span v-if="genre == 1" class="item-genre">{{ genreAsString(localItem.genre) }}</span>
       </div>
     </div>
@@ -132,8 +145,33 @@
         });
       },
 
-      editItem() {
+      toggleWatchingNow() {
+        this.rated = true;
 
+        http.patch(`${config.api}/watching-now/${this.localItem.id}`).then(response => {
+          this.rated = false;
+          this.localItem.watching_now = response.data.watching_now;
+        }, error => {
+          alert(error.response ? error.response.data : error);
+          this.rated = false;
+        });
+      },
+
+      editItem() {
+        const tmdbId = window.prompt('New TMDb ID', this.localItem.tmdb_id || '');
+
+        if( ! tmdbId) {
+          return;
+        }
+
+        this.rated = true;
+
+        http.patch(`${config.api}/manual-tmdb-update/${this.localItem.id}`, {tmdb_id: tmdbId}).then(response => {
+          location.reload();
+        }, error => {
+          alert(error.response ? error.response.data : error);
+          this.rated = false;
+        });
       }
     },
 

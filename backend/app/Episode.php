@@ -4,6 +4,7 @@
 
   use Carbon\Carbon;
   use Illuminate\Database\Eloquent\Model;
+  use Illuminate\Support\Facades\DB;
 
   class Episode extends Model {
 
@@ -134,5 +135,25 @@
     {
       return $query->where('tmdb_id', $tmdbId)
         ->where('season_number', $season);
+    }
+
+    /**
+     * Keep only unseen episodes after the latest seen progress.
+     */
+    public function scopeAfterLatestSeenProgress($query)
+    {
+      return $query->whereNotExists(function($query) {
+        $query->select(DB::raw(1))
+          ->from('episodes as seen_episodes')
+          ->whereRaw('seen_episodes.tmdb_id = episodes.tmdb_id')
+          ->where('seen_episodes.seen', 1)
+          ->where(function($query) {
+            $query->whereRaw('seen_episodes.season_number > episodes.season_number')
+              ->orWhere(function($query) {
+                $query->whereRaw('seen_episodes.season_number = episodes.season_number')
+                  ->whereRaw('seen_episodes.episode_number > episodes.episode_number');
+              });
+          });
+      });
     }
   }

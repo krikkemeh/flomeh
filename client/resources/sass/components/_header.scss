@@ -12,7 +12,7 @@ header {
   background: $main2;
   background: $gradient;
   width: 100%;
-  padding: 25px 0;
+  padding: 12px 0;
   position: relative;
   z-index: 20;
   opacity: 0;
@@ -23,13 +23,13 @@ header {
   }
   
   .sticky & {
-    padding: 10px 0;
+    padding: 6px 0;
     opacity: .97;
   }
 
   .subpage-open & {
     background: none;
-    padding: 25px 0;
+    padding: 12px 0;
   }
   
   .mobile-open & {
@@ -49,6 +49,10 @@ header {
   
   img {
     @include transition(width, height);
+    display: block;
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
 
     .sticky & {
       //width: 90px;

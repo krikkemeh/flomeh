@@ -84,7 +84,12 @@
       Carbon::setLocale(config('app.TRANSLATION'));
 
       $episodes = $this->model->findByTmdbId($tmdbId)->oldest('episode_number')->get()->groupBy('season_number');
-      $nextEpisode = $this->model->findByTmdbId($tmdbId)->where('seen', 0)->oldest('season_number')->oldest('episode_number')->first();
+      $nextEpisode = $this->model->findByTmdbId($tmdbId)
+        ->where('seen', 0)
+        ->afterLatestSeenProgress()
+        ->oldest('season_number')
+        ->oldest('episode_number')
+        ->first();
 
       return [
         'episodes' => $episodes,
@@ -109,9 +114,13 @@
           $this->item->updateLastSeenAt($episode->tmdb_id);
         }
 
-        return $episode->update([
+        $updated = $episode->update([
           'seen' => ! $episode->seen,
         ]);
+
+        $this->markCompletedTvAsWatchingNow($episode->tmdb_id);
+
+        return $updated;
       }
     }
 
@@ -136,6 +145,17 @@
           'seen' => $seen,
         ]);
       });
+
+      $this->markCompletedTvAsWatchingNow($tmdbId);
+    }
+
+    private function markCompletedTvAsWatchingNow($tmdbId)
+    {
+      $item = $this->item->findByTmdbId($tmdbId)->with('latestEpisode')->first();
+
+      if($item && $item->media_type == 'tv' && $item->rating !== null && $item->tmdb_id && ! $item->latestEpisode) {
+        $item->update(['watching_now' => true]);
+      }
     }
 
     /**

@@ -40,7 +40,28 @@ class ImportEpisode implements ShouldQueue
         try {
           $ep = collect($ep)->except('id')->toArray();
           
-          $episode->create($ep);
+          if(isset($ep['tmdb_id'], $ep['season_number'], $ep['episode_number'])) {
+            $existingEpisode = $episode
+              ->where('tmdb_id', $ep['tmdb_id'])
+              ->where('season_number', $ep['season_number'])
+              ->where('episode_number', $ep['episode_number'])
+              ->first();
+
+            if($existingEpisode && $existingEpisode->seen && isset($ep['seen']) && ! $ep['seen']) {
+              $ep['seen'] = true;
+            }
+
+            $episode->updateOrCreate(
+              [
+                'tmdb_id' => $ep['tmdb_id'],
+                'season_number' => $ep['season_number'],
+                'episode_number' => $ep['episode_number'],
+              ],
+              $ep
+            );
+          } else {
+            $episode->create($ep);
+          }
         } catch(\Exception $e) {
           logInfo("Failed:", [$e]);
           throw $e;

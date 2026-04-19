@@ -3,7 +3,7 @@
     <header>
       <div class="wrap">
         <router-link to="/" @click.native="refresh('home')" class="logo">
-          <img src="../../../public/assets/img/logo.png" alt="Flox" width="108" height="32">
+          <img :src="root + '/assets/img/steampunk-logo.png'" alt="Flomeh" width="72" height="72">
         </router-link>
         
         <i @click="toggleMobileNavigation()" class="icon-hamburger"></i>
@@ -18,6 +18,9 @@
           </li>
           <li>
             <router-link to="/upcoming" @click.native="refresh('upcoming')">{{ lang('upcoming') }}</router-link>
+          </li>
+          <li>
+            <router-link to="/settings" @click.native="refresh('settings')">Settings</router-link>
           </li>
         </ul>
 

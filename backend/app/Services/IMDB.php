@@ -15,7 +15,15 @@
 
     public function parseRating($id = null)
     {
-      $document = $this->document->loadHtmlFile(config('services.imdb.url') . $id);
+      if( ! $id) {
+        return null;
+      }
+
+      try {
+        $document = $this->document->loadHtmlFile(config('services.imdb.url') . $id);
+      } catch(\Throwable $exception) {
+        return null;
+      }
 
       // We don't need to check if we found a result if we loop over them.
       foreach($document->find('.ratingValue strong span') as $rating) {

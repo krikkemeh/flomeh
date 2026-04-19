@@ -38,7 +38,7 @@
      */
     public function checkForUpdate(Client $client)
     {
-      $response = json_decode($client->get('https://api.github.com/repos/devfake/flox/releases')->getBody());
+      $response = json_decode($client->get('https://api.github.com/repos/krikkemeh/flomeh/releases')->getBody());
 
       $lastestVersion = $response[0]->name;
 

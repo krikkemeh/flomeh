@@ -9,6 +9,7 @@
   use App\Services\TMDB;
   use App\Jobs\UpdateItem;
   use App\Setting;
+  use Carbon\Carbon;
   use Illuminate\Support\Facades\DB;
   use Symfony\Component\HttpFoundation\Response;
 
@@ -173,6 +174,112 @@
     }
 
     /**
+     * Manually change the TMDb id and refresh all online metadata.
+     *
+     * @param $itemId
+     * @param $tmdbId
+     *
+     * @return Item|false
+     */
+    public function manualTmdbUpdate($itemId, $tmdbId)
+    {
+      $item = $this->model->findOrFail($itemId);
+      $oldTmdbId = $item->tmdb_id;
+      $tmdbId = (int) $tmdbId;
+
+      if($tmdbId <= 0) {
+        return false;
+      }
+
+      $latestSeenEpisode = null;
+
+      if($item->media_type == 'tv' && $oldTmdbId) {
+        $latestSeenEpisode = \App\Episode::where('tmdb_id', $oldTmdbId)
+          ->where('seen', true)
+          ->orderBy('season_number', 'desc')
+          ->orderBy('episode_number', 'desc')
+          ->first();
+      }
+
+      $details = $this->tmdb->details($tmdbId, $item->media_type);
+      $title = $details->name ?? ($details->title ?? null);
+
+      if( ! $title) {
+        return false;
+      }
+
+      try {
+        DB::beginTransaction();
+
+        $this->storage->removeImages($item->poster, $item->backdrop);
+
+        if($oldTmdbId && $oldTmdbId != $tmdbId) {
+          DB::table('episodes')->where('tmdb_id', $oldTmdbId)->update(['tmdb_id' => $tmdbId]);
+          $this->alternativeTitleService->remove($oldTmdbId);
+        }
+
+        $releaseDate = $details->release_date ?? $details->first_air_date ?? Item::FALLBACK_DATE;
+
+        try {
+          $release = Carbon::createFromFormat('Y-m-d', $releaseDate ?: Item::FALLBACK_DATE);
+        } catch(\Exception $e) {
+          $release = Carbon::createFromFormat('Y-m-d', Item::FALLBACK_DATE);
+        }
+
+        $imdbId = $this->parseImdbId($details);
+
+        $item->update([
+          'tmdb_id' => $tmdbId,
+          'imdb_id' => $imdbId,
+          'youtube_key' => $this->parseYoutubeKey($details, $item->media_type),
+          'overview' => $details->overview,
+          'tmdb_rating' => $details->vote_average,
+          'imdb_rating' => $this->parseImdbRating(['imdb_id' => $imdbId]),
+          'backdrop' => $details->backdrop_path,
+          'poster' => $details->poster_path,
+          'slug' => getSlug($title),
+          'title' => $title,
+          'homepage' => $details->homepage ?? null,
+          'original_title' => $details->original_name ?? $details->original_title ?? $title,
+          'released' => $release->getTimestamp(),
+          'released_timestamp' => $release->toDateTimeString(),
+          'refreshed_at' => now(),
+        ]);
+
+        $item = $item->fresh();
+
+        $this->episodeService->create($item);
+
+        if($latestSeenEpisode) {
+          $this->markImportedEpisodesAsSeen(
+            $item->tmdb_id,
+            $latestSeenEpisode->season_number,
+            $latestSeenEpisode->episode_number
+          );
+        }
+
+        $this->markCompletedTvAsWatchingNow($item);
+
+        $this->alternativeTitleService->create($item);
+
+        $this->genreService->sync(
+          $item,
+          isset($details->genres) ? collect($details->genres)->pluck('id')->all() : []
+        );
+
+        $this->storage->downloadImages($item->poster, $item->backdrop);
+
+        DB::commit();
+
+        return $item;
+      } catch(\Exception $e) {
+        DB::rollBack();
+
+        throw $e;
+      }
+    }
+
+    /**
      * If the user clicks to fast on adding item,
      * we need to re-fetch the rating from IMDb.
      *
@@ -270,18 +377,30 @@
     }
 
     /**
-     * Return all items with pagination.
+     * Return all items.
      *
      * @param $type
      * @param $orderBy
      * @param $sortDirection
-     * @return mixed
+     * @return array
      */
-    public function getWithPagination($type, $orderBy, $sortDirection)
+    public function getWithPagination($type, $orderBy, $sortDirection, $includeNotWatching = false, $includeCompleted = false)
     {
-      $filter = $this->getSortFilter($orderBy);
+      $items = $this->itemsQuery($type)->with('latestEpisode')->withCount('episodesWithSrc');
 
-      $items = $this->model->orderBy($filter, $sortDirection)->with('latestEpisode')->withCount('episodesWithSrc');
+      $this->applyHomeVisibility($items, $type, $includeNotWatching, $includeCompleted);
+      $this->applySort($items, $orderBy, $sortDirection);
+
+      return [
+        'data' => $items->get(),
+        'next_page_url' => null,
+        'groups' => $this->homeGroups($type),
+      ];
+    }
+
+    private function itemsQuery($type)
+    {
+      $items = $this->model->newQuery();
 
       if($type == 'watchlist') {
         $items->where('watchlist', true);
@@ -293,7 +412,114 @@
         $items->where('media_type', $type);
       }
 
-      return $items->simplePaginate(config('app.LOADING_ITEMS'));
+      return $items;
+    }
+
+    private function applySort($items, $orderBy, $sortDirection)
+    {
+      $filter = $this->getSortFilter($orderBy);
+
+      if($orderBy == 'own rating') {
+        return $items->orderByRaw('CASE
+          WHEN rating = 4 THEN 0
+          WHEN rating = 1 THEN 1
+          WHEN rating = 2 THEN 2
+          WHEN rating = 3 THEN 3
+          ELSE 4
+        END ASC')->orderBy('title', 'asc');
+      }
+
+      return $items->orderBy($filter, $sortDirection);
+    }
+
+    private function applyHomeVisibility($items, $type, $includeNotWatching, $includeCompleted)
+    {
+      if($type != 'home') {
+        return;
+      }
+
+      $items->where(function($query) use ($includeNotWatching, $includeCompleted) {
+        $query->where(function($query) {
+          $this->whereActive($query);
+          $query->where('watching_now', true);
+        });
+
+        if($includeNotWatching) {
+          $query->orWhere(function($query) {
+            $this->whereActive($query);
+            $query->where('watching_now', false);
+          });
+        }
+
+        if($includeCompleted) {
+          $query->orWhere(function($query) {
+            $this->whereCompleted($query);
+          });
+        }
+      });
+    }
+
+    private function homeGroups($type)
+    {
+      if($type != 'home') {
+        return [
+          'watching' => 0,
+          'not_watching' => 0,
+          'completed' => 0,
+        ];
+      }
+
+      return [
+        'watching' => $this->itemsQuery($type)->where(function($query) {
+          $this->whereActive($query);
+          $query->where('watching_now', true);
+        })->count(),
+        'not_watching' => $this->itemsQuery($type)->where(function($query) {
+          $this->whereActive($query);
+          $query->where('watching_now', false);
+        })->count(),
+        'completed' => $this->itemsQuery($type)->where(function($query) {
+          $this->whereCompleted($query);
+        })->count(),
+      ];
+    }
+
+    private function whereActive($query)
+    {
+      return $query->where(function($query) {
+        $query->where(function($query) {
+          $query->where('media_type', 'movie')
+            ->where(function($query) {
+              $query->whereNull('rating')
+                ->orWhere('rating', 0);
+            });
+        })->orWhere(function($query) {
+          $query->where('media_type', 'tv')
+            ->where(function($query) {
+              $query->whereNull('rating')
+                ->orWhereNull('tmdb_id')
+                ->orWhereHas('latestEpisode');
+            });
+        })->orWhere(function($query) {
+          $query->whereNotIn('media_type', ['movie', 'tv']);
+        });
+      });
+    }
+
+    private function whereCompleted($query)
+    {
+      return $query->where('watchlist', false)->where(function($query) {
+        $query->where(function($query) {
+          $query->where('media_type', 'movie')
+            ->whereNotNull('rating')
+            ->where('rating', '<>', 0);
+        })->orWhere(function($query) {
+          $query->where('media_type', 'tv')
+            ->whereNotNull('rating')
+            ->whereNotNull('tmdb_id')
+            ->whereDoesntHave('latestEpisode');
+        });
+      });
     }
 
     /**
@@ -322,6 +548,21 @@
       ]);
     }
 
+    public function toggleWatchingNow($itemId)
+    {
+      $item = $this->model->find($itemId);
+
+      if( ! $item) {
+        return response('Not Found', Response::HTTP_NOT_FOUND);
+      }
+
+      $item->update([
+        'watching_now' => ! $item->watching_now,
+      ]);
+
+      return $item->fresh();
+    }
+
     /**
      * Search for all items by title in our database.
      *
@@ -340,10 +581,10 @@
      */
     public function import($item)
     {
-      logInfo("Importing", [$item->title]);
+      logInfo("Importing", [$item->title ?? $item->tmdb_id]);
 
       // Fallback if export was from an older version of flox (<= 1.2.2).
-      if( ! isset($item->last_seen_at)) {
+      if( ! isset($item->last_seen_at) && isset($item->created_at)) {
         $item->last_seen_at = Carbon::createFromTimestamp($item->created_at);
       }
 
@@ -352,15 +593,180 @@
         unset($item->genre);
       }
 
-      // For empty items (from file-parser) we don't need access to details.
-      if($item->tmdb_id) {
-        $item = $this->makeDataComplete((array) $item);
-        $this->storage->downloadImages($item['poster'], $item['backdrop']);
+      $item = collect($item)->except('id', 'startDate')->toArray();
+      $seenSeason = $item['import_seen_season'] ?? null;
+      $seenEpisode = $item['import_seen_episode'] ?? null;
+
+      unset($item['import_seen_season'], $item['import_seen_episode']);
+
+      $genreIds = [];
+
+      if( ! empty($item['tmdb_id'])) {
+        try {
+          $item = $this->completeImportData($item);
+          $genreIds = $item['genre_ids'] ?? [];
+        } catch(\Exception $e) {
+          logInfo("Import enrichment failed, using minimal data", [$e->getMessage()]);
+        }
       }
 
-      $item = collect($item)->except('id')->toArray();
+      $item = $this->withImportDefaults($item);
+      $itemData = collect($item)->except('genre_ids', 'genre', 'episodes', 'popularity')->toArray();
+      $createdItem = $this->importItemData($itemData);
 
-      Item::create($item);
+      if($createdItem->tmdb_id && $createdItem->media_type == 'tv') {
+        try {
+          $this->episodeService->create($createdItem);
+        } catch(\Exception $e) {
+          logInfo("Import episode enrichment failed", [$e->getMessage()]);
+        }
+
+        if($seenSeason && $seenEpisode) {
+          $this->markImportedEpisodesAsSeen($createdItem->tmdb_id, $seenSeason, $seenEpisode);
+        }
+
+        $this->markCompletedTvAsWatchingNow($createdItem);
+      }
+
+      if($createdItem->tmdb_id) {
+        try {
+          $this->genreService->sync($createdItem, $genreIds);
+          $this->alternativeTitleService->create($createdItem);
+          $this->storage->downloadImages($createdItem->poster, $createdItem->backdrop);
+        } catch(\Exception $e) {
+          logInfo("Import post-processing failed", [$e->getMessage()]);
+        }
+      }
+    }
+
+    private function importItemData($itemData)
+    {
+      if( ! empty($itemData['tmdb_id'])) {
+        return Item::updateOrCreate(
+          [
+            'tmdb_id' => $itemData['tmdb_id'],
+            'media_type' => $itemData['media_type'],
+          ],
+          $itemData
+        );
+      }
+
+      return Item::create($itemData);
+    }
+
+    private function completeImportData($item)
+    {
+      $details = $this->tmdb->details($item['tmdb_id'], $item['media_type']);
+      $title = $details->name ?? $details->title ?? ($item['title'] ?? '');
+      $releaseDate = $details->release_date ?? $details->first_air_date ?? Item::FALLBACK_DATE;
+
+      try {
+        $release = Carbon::createFromFormat('Y-m-d', $releaseDate ?: Item::FALLBACK_DATE);
+      } catch(\Exception $e) {
+        $release = Carbon::createFromFormat('Y-m-d', Item::FALLBACK_DATE);
+      }
+
+      $imdbId = $item['imdb_id'] ?? $this->parseImdbId($details);
+
+      $item['title'] = $title ?: ($item['title'] ?? '');
+      $item['original_title'] = $item['original_title'] ?? $details->original_name ?? $details->original_title ?? $item['title'];
+      $item['poster'] = ! empty($item['poster']) ? $item['poster'] : ($details->poster_path ?? '');
+      $item['released'] = $item['released'] ?? $release->getTimestamp();
+      $item['released_timestamp'] = $item['released_timestamp'] ?? $release->toDateTimeString();
+      $item['imdb_id'] = $imdbId;
+      $item['youtube_key'] = $item['youtube_key'] ?? $this->parseYoutubeKey($details, $item['media_type']);
+      $item['overview'] = $item['overview'] ?? $details->overview ?? null;
+      $item['tmdb_rating'] = $item['tmdb_rating'] ?? $details->vote_average ?? null;
+      $item['imdb_rating'] = $item['imdb_rating'] ?? $this->parseImdbRating(['imdb_id' => $imdbId]);
+      $item['backdrop'] = ! empty($item['backdrop']) ? $item['backdrop'] : ($details->backdrop_path ?? null);
+      $item['slug'] = $item['slug'] ?? getSlug($item['title']);
+      $item['homepage'] = $item['homepage'] ?? $details->homepage ?? null;
+      $item['genre_ids'] = isset($details->genres) ? collect($details->genres)->pluck('id')->all() : [];
+
+      return $item;
+    }
+
+    private function withImportDefaults($item)
+    {
+      $now = now()->toDateTimeString();
+
+      $item['poster'] = $item['poster'] ?? '';
+      $item['title'] = $item['title'] ?? $item['original_title'] ?? $item['fp_name'] ?? '';
+      $item['original_title'] = $item['original_title'] ?? $item['title'];
+      $item['media_type'] = $item['media_type'] ?? 'movie';
+      $item['rating'] = $item['rating'] ?? ($item['media_type'] == 'movie' ? 1 : 0);
+      $item['released'] = $item['released'] ?? 0;
+      $item['released_timestamp'] = $item['released_timestamp'] ?? null;
+      $item['watchlist'] = $item['watchlist'] ?? false;
+      $item['created_at'] = $item['created_at'] ?? $now;
+      $item['updated_at'] = $item['updated_at'] ?? $now;
+      $item['last_seen_at'] = $item['last_seen_at'] ?? $now;
+
+      return $item;
+    }
+
+    private function markImportedEpisodesAsSeen($tmdbId, $season, $episode)
+    {
+      $latestSeenEpisode = \App\Episode::where('tmdb_id', $tmdbId)
+        ->where('seen', true)
+        ->orderBy('season_number', 'desc')
+        ->orderBy('episode_number', 'desc')
+        ->first();
+
+      if($latestSeenEpisode && $this->episodeIsAfter($latestSeenEpisode, $season, $episode)) {
+        $season = $latestSeenEpisode->season_number;
+        $episode = $latestSeenEpisode->episode_number;
+      }
+
+      $updated = \App\Episode::where('tmdb_id', $tmdbId)
+        ->where(function($query) use ($season, $episode) {
+          $query->where('season_number', '<', $season)
+            ->orWhere(function($query) use ($season, $episode) {
+              $query->where('season_number', $season)
+                ->where('episode_number', '<=', $episode);
+            });
+        })
+        ->update(['seen' => true]);
+
+      if( ! $updated) {
+        \App\Episode::updateOrCreate(
+          [
+            'tmdb_id' => $tmdbId,
+            'season_number' => $season,
+            'episode_number' => $episode,
+          ],
+          [
+            'name' => 'Episode ' . $episode,
+            'season_tmdb_id' => 0,
+            'episode_tmdb_id' => 0,
+            'seen' => true,
+            'release_episode' => null,
+            'release_season' => null,
+          ]
+        );
+      }
+    }
+
+    private function episodeIsAfter($episode, $season, $episodeNumber)
+    {
+      if($episode->season_number > $season) {
+        return true;
+      }
+
+      return $episode->season_number == $season && $episode->episode_number > $episodeNumber;
+    }
+
+    private function markCompletedTvAsWatchingNow($item)
+    {
+      if( ! $item || $item->media_type != 'tv' || $item->rating === null || ! $item->tmdb_id) {
+        return;
+      }
+
+      $item = Item::findByTmdbId($item->tmdb_id)->with('latestEpisode')->first();
+
+      if($item && ! $item->latestEpisode) {
+        $item->update(['watching_now' => true]);
+      }
     }
 
     /**

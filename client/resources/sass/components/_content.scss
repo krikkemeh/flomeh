@@ -79,11 +79,52 @@ main {
   @include media(6) {  }
 }
 
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 185px));
+  justify-content: space-between;
+  column-gap: 30px;
+
+  &:before,
+  &:after {
+    display: none;
+  }
+
+  .item-wrap {
+    float: none !important;
+    clear: none !important;
+    width: auto !important;
+    margin-right: 0 !important;
+  }
+
+  .load-more-wrap,
+  .nothing-found {
+    grid-column: 1 / -1;
+  }
+
+  @include media(1) {
+    grid-template-columns: repeat(4, minmax(0, 185px));
+  }
+
+  @include media(3) {
+    grid-template-columns: repeat(3, minmax(0, 185px));
+  }
+
+  @include media(5) {
+    grid-template-columns: repeat(2, minmax(0, 185px));
+  }
+
+  @include media(6) {
+    grid-template-columns: repeat(2, minmax(0, 125px));
+  }
+}
+
 .show-ratings-never {
   .rating-0,
   .rating-1,
   .rating-2,
-  .rating-3 {
+  .rating-3,
+  .rating-4 {
     display: none;
   }
 }
@@ -141,7 +182,8 @@ main {
 
     .recommend-item,
     .add-to-watchlist,
-    .remove-from-watchlist {
+    .remove-from-watchlist,
+    .watching-now-toggle {
       opacity: .9;
     }
 
@@ -247,6 +289,37 @@ main {
   background: url(../../../public/assets/img/has-src.png);
 }
 
+.watchlist-text-btn {
+  float: left;
+  width: 100%;
+  margin: 8px 0 0 0;
+  padding: 6px 8px;
+  background: #238cce;
+  color: #fff;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: 12px;
+  cursor: pointer;
+
+  @include transition(background, opacity);
+
+  &:hover {
+    background: lighten(#238cce, 5%);
+  }
+
+  &:active {
+    opacity: .8;
+  }
+
+  &.remove {
+    background: $main2;
+
+    &:hover {
+      background: lighten($main2, 5%);
+    }
+  }
+}
+
 .is-finished {
   float: left;
   margin: 0 5px;
@@ -317,6 +390,27 @@ main {
 
   .icon-rating {
     background: url(../../../public/assets/img/rating-3.png);
+  }
+}
+
+.rating-4 {
+  background: #e91e63;
+
+  .icon-rating {
+    background: none;
+    position: relative;
+
+    &:before {
+      content: '\2665';
+      color: #fff;
+      display: block;
+      font-family: Arial, sans-serif;
+      font-size: 31px;
+      height: 50px;
+      line-height: 50px;
+      text-align: center;
+      width: 50px;
+    }
   }
 }
 
@@ -397,7 +491,8 @@ main {
 
 .add-to-watchlist,
 .remove-from-watchlist,
-.edit-item {
+.edit-item,
+.watching-now-toggle {
   position: absolute;
   bottom: 0;
   right: 0;
@@ -425,6 +520,43 @@ main {
 
   @include media(3) {
     display: none;
+  }
+}
+
+.watching-now-toggle {
+  left: 0;
+  right: auto;
+  width: 38px;
+  height: 30px;
+  padding: 0;
+  background: rgba(#050505, .78);
+  opacity: 0;
+  z-index: 130;
+
+  &.active {
+    opacity: 1;
+    background: #238cce;
+  }
+
+  i {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    &:before {
+      content: '\25C9';
+      display: block;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      font-size: 19px;
+      line-height: 30px;
+      text-align: center;
+    }
+  }
+
+  @include media(3) {
+    display: block;
+    opacity: 1;
   }
 }
 
@@ -628,6 +760,20 @@ main {
   visibility: hidden;
 }
 
+.item-grid {
+  .fade-enter-active,
+  .fade-leave-active {
+    transition: none;
+  }
+
+  .fade-enter,
+  .fade-leave {
+    top: 0;
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
 .box {
   float: left;
   width: 100%;
@@ -656,8 +802,12 @@ main {
   z-index: 150;
 }
 
-.sort-wrap {
+.content-tools {
   float: right;
+}
+
+.sort-wrap {
+  float: left;
 
   .icon-sort-time,
   .icon-sort-star {
@@ -681,6 +831,74 @@ main {
     &:first-child {
       margin: 0;
     }
+  }
+}
+
+.completed-toggle {
+  float: left;
+  margin: 0 12px 0 0;
+  padding: 7px 10px;
+  border: 0;
+  background: transparent;
+  color: #888;
+  font-size: 14px;
+  cursor: pointer;
+
+  &.active {
+    color: #fff;
+    background: $gradient;
+  }
+
+  &:active {
+    opacity: .7;
+  }
+
+  .dark & {
+    color: #626262;
+
+    &.active {
+      color: #fff;
+    }
+  }
+}
+
+.completed-separator {
+  float: left;
+  width: 100%;
+  grid-column: 1 / -1;
+  margin: 0 0 45px 0;
+  border-top: 1px solid rgba(#888, .35);
+  text-align: center;
+
+  &.clickable {
+    cursor: pointer;
+  }
+
+  span {
+    display: inline-block;
+    padding: 0 14px;
+    background: #fff;
+    color: #888;
+    font-size: 13px;
+    text-transform: uppercase;
+    transform: translateY(-50%);
+  }
+
+  &.clickable:hover span {
+    color: $main2;
+  }
+
+  .dark & {
+    border-color: rgba(#fff, .12);
+
+    span {
+      background: #1c1c1c;
+      color: #626262;
+    }
+  }
+
+  .dark &.clickable:hover span {
+    color: #fff;
   }
 }
 
@@ -814,7 +1032,7 @@ main {
     }
 
     &.active {
-      color: $main2;
+      color: #fff;
       border-bottom: 2px solid $main2;
 
       @include media(6) {
@@ -874,7 +1092,8 @@ main {
 
 .load-more-wrap {
   float: left;
-  height: 100px;
+  min-height: 140px;
+  padding-bottom: 40px;
   position: relative;
   width: 100%;
 }
@@ -882,6 +1101,7 @@ main {
 .load-more {
   float: left;
   width: 100%;
+  margin: 0 0 10px 0;
   padding: 15px;
   background: #e1e1e1;
   color: $dark;
@@ -1023,6 +1243,93 @@ main {
 
   &:active {
     opacity: .8;
+  }
+}
+
+.settings-box > .setting-btn + .setting-btn {
+  margin-left: 10px;
+}
+
+.import-actions {
+  float: left;
+  clear: both;
+  display: flex;
+  gap: 10px;
+
+  input[type="submit"],
+  .setting-btn {
+    float: none;
+    margin: 0;
+  }
+}
+
+.import-add-btn {
+  margin-left: 0;
+}
+
+.import-ai {
+  float: left;
+  clear: both;
+  width: 100%;
+  margin-top: 20px;
+
+  h2 {
+    margin: 0 0 10px 0;
+    color: #fff;
+    font-size: 22px;
+  }
+
+  p {
+    margin: 0 0 15px 0;
+    color: $text;
+  }
+
+  textarea {
+    float: left;
+    clear: both;
+    width: 100%;
+    min-height: 160px;
+    margin: 0 0 15px 0;
+    padding: 12px;
+    background: $dark;
+    color: #fff;
+    border: 1px solid $darkGray;
+    resize: vertical;
+  }
+
+  .import-ai-json {
+    min-height: 260px;
+    font-family: monospace;
+  }
+}
+
+.error-box {
+  color: $text;
+
+  h2 {
+    margin: 0 0 15px 0;
+    color: #fff;
+    font-size: 22px;
+  }
+
+  p {
+    float: left;
+    clear: both;
+    width: 100%;
+    margin: 0 0 10px 0;
+  }
+
+  strong {
+    color: #fff;
+  }
+
+  a {
+    color: $main1;
+  }
+
+  .setting-btn {
+    clear: both;
+    margin-top: 10px;
   }
 }
 

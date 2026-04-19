@@ -34,7 +34,7 @@
         margin: 0 0 20px 0;
       }
     </mj-style>
-    <mj-title>Flox</mj-title>
+    <mj-title>Flomeh</mj-title>
     <mj-attributes>
       <mj-all font-family="Arial, sans-serif"></mj-all>
     </mj-attributes>
@@ -84,7 +84,7 @@
     <mj-section>
       <mj-column>
         <mj-text color="gray">
-          No longer want to receive these emails? Change your <a class="link" target="_blank" href="{{ url('/settings') }}">settings</a> in flox.
+          No longer want to receive these emails? Change your <a class="link" target="_blank" href="{{ url('/settings') }}">settings</a> in Flomeh.
         </mj-text>
       </mj-column>
     </mj-section>
