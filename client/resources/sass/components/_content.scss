@@ -1281,7 +1281,7 @@ main {
 
   p {
     margin: 0 0 15px 0;
-    color: $text;
+    color: $lightGray;
   }
 
   textarea {
@@ -1293,7 +1293,7 @@ main {
     padding: 12px;
     background: $dark;
     color: #fff;
-    border: 1px solid $darkGray;
+    border: 1px solid darken($dark, 10%);
     resize: vertical;
   }
 
@@ -1304,7 +1304,7 @@ main {
 }
 
 .error-box {
-  color: $text;
+  color: $lightGray;
 
   h2 {
     margin: 0 0 15px 0;
@@ -1331,6 +1331,90 @@ main {
     clear: both;
     margin-top: 10px;
   }
+}
+
+.sync-log-box {
+  color: $lightGray;
+
+  h2 {
+    margin: 0 0 15px 0;
+    color: #fff;
+    font-size: 22px;
+  }
+
+  p {
+    float: left;
+    clear: both;
+    width: 100%;
+    margin: 0 0 10px 0;
+  }
+}
+
+.sync-log-table-wrap {
+  float: left;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.sync-log-table {
+  float: left;
+  width: 100%;
+  border-collapse: collapse;
+  color: $lightGray;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(#fff, .08);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    color: #fff;
+    font-size: 12px;
+    text-transform: uppercase;
+  }
+}
+
+.sync-log-row-actionable {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(#fff, .04);
+  }
+}
+
+.sync-status {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: #484848;
+  color: #fff;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.status-updated,
+.status-created_and_updated,
+.status-noop_already_seen {
+  background: #6bb01a;
+}
+
+.status-ignored_by_client {
+  background: #888;
+}
+
+.status-ambiguous,
+.status-not_found,
+.status-invalid_media_type {
+  background: #b97d13;
+}
+
+.status-error,
+.status-failed {
+  background: #cd2727;
 }
 
 .production-message {

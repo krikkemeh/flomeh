@@ -705,7 +705,7 @@
       return $item;
     }
 
-    private function markImportedEpisodesAsSeen($tmdbId, $season, $episode)
+    public function markEpisodesAsSeenUntil($tmdbId, $season, $episode)
     {
       $latestSeenEpisode = \App\Episode::where('tmdb_id', $tmdbId)
         ->where('seen', true)
@@ -718,7 +718,7 @@
         $episode = $latestSeenEpisode->episode_number;
       }
 
-      $updated = \App\Episode::where('tmdb_id', $tmdbId)
+      return \App\Episode::where('tmdb_id', $tmdbId)
         ->where(function($query) use ($season, $episode) {
           $query->where('season_number', '<', $season)
             ->orWhere(function($query) use ($season, $episode) {
@@ -727,6 +727,11 @@
             });
         })
         ->update(['seen' => true]);
+    }
+
+    public function markImportedEpisodesAsSeen($tmdbId, $season, $episode)
+    {
+      $updated = $this->markEpisodesAsSeenUntil($tmdbId, $season, $episode);
 
       if( ! $updated) {
         \App\Episode::updateOrCreate(
@@ -744,7 +749,11 @@
             'release_season' => null,
           ]
         );
+
+        return 1;
       }
+
+      return $updated;
     }
 
     private function episodeIsAfter($episode, $season, $episodeNumber)

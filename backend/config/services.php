@@ -51,4 +51,8 @@ return [
       'port' => env('FP_PORT'),
     ],
 
+    'external_progress' => [
+      'token' => env('EXTERNAL_PROGRESS_TOKEN'),
+    ],
+
 ];

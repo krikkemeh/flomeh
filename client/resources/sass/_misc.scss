@@ -1,10 +1,11 @@
-$main1: #4b0012;
-$main2: #050505;
+$main1: #4a2312;
+$main2: #0f0b09;
 $dark: #484848;
 $lightGray: #838383;
 $rating1: #6bb01a;
 $rating2: #da9527;
 $rating3: #cd2727;
+$accentWarm: #c96a1b;
 $gradient: linear-gradient(to right, $main1, $main2);
 
 @mixin transition($type, $type2: '', $type3: '') {
@@ -59,7 +60,7 @@ $gradient: linear-gradient(to right, $main1, $main2);
   height: 29px;
   display: block;
   margin: 0 auto;
-  border: 4px solid rgb(241,48,154);
+  border: 4px solid $accentWarm;
   animation: cssload-loader 2.3s infinite ease;
 
   .dark & {
@@ -70,7 +71,7 @@ $gradient: linear-gradient(to right, $main1, $main2);
     vertical-align: top;
     display: inline-block;
     width: 100%;
-    background-color: rgb(241,48,154);
+    background-color: $accentWarm;
     animation: cssload-loader-inner 2.3s infinite ease-in;
   }
 }

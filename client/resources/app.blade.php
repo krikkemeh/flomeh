@@ -8,7 +8,7 @@
 
   <title>FloMeh</title>
   <link rel="stylesheet" href="{{ rtrim(config('app.url'), '/') }}/assets/app.css?v=4">
-  <link href="{{ rtrim(config('app.url'), '/') }}/assets/favicon.ico?v=3" rel="icon" type="image/x-icon">
+  <link href="{{ rtrim(config('app.url'), '/') }}/assets/favicon.ico?v=4" rel="icon" type="image/x-icon">
 
 </head>
 <body

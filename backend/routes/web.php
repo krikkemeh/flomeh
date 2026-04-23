@@ -28,6 +28,11 @@
       Route::post('plex', 'ApiController@plex');
     });
 
+    Route::middleware('external_progress_token')->group(function() {
+      Route::post('/external/progress', 'ExternalProgressController@store');
+      Route::post('/external/progress/next', 'ExternalProgressController@next');
+    });
+
     Route::middleware('auth')->group(function() {
       Route::get('/check-update', 'SettingController@checkForUpdate');
       Route::get('/version', 'SettingController@getVersion');
@@ -62,6 +67,8 @@
       Route::post('/import', 'ExportImportController@import');
       Route::post('/import-add', 'ExportImportController@importAdd');
       Route::post('/import-ai-format', 'ExportImportController@importAiFormat');
+      Route::get('/external/progress-events', 'ExternalProgressController@index');
+      Route::post('/external/progress-events/{eventId}/override', 'ExternalProgressController@storeOverride');
       Route::get('/import-jobs/pending', 'ExportImportController@pendingImportJobs');
       Route::get('/import-jobs/log/{date?}', 'ExportImportController@importLog');
       Route::patch('/import-jobs/clear-error', 'ExportImportController@clearImportError');

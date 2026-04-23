@@ -3,7 +3,10 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules",
     "dev": "webpack -w --progress --hide-modules",
-    "mail": "./node_modules/.bin/mjml ./resources/mails/templates/*.mjml.blade.php -o ./resources/mails/compiled"
+    "mail": "./node_modules/.bin/mjml ./resources/mails/templates/*.mjml.blade.php -o ./resources/mails/compiled",
+    "install:legacy": "powershell -ExecutionPolicy Bypass -File ./scripts/install-legacy.ps1",
+    "build:legacy": "powershell -ExecutionPolicy Bypass -File ./scripts/webpack-legacy.ps1 build",
+    "dev:legacy": "powershell -ExecutionPolicy Bypass -File ./scripts/webpack-legacy.ps1 dev"
   },
   "dependencies": {
     "axios": "^0.18.1",

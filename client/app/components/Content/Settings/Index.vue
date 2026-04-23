@@ -8,6 +8,7 @@
         <span :class="{active: activeTab == 'options'}" @click="changeActiveTab('options')">{{ lang('tab options') }}</span>
         <span :class="{active: activeTab == 'refresh'}" @click="changeActiveTab('refresh')">{{ lang('refresh') }}</span>
         <span :class="{active: activeTab == 'reminders'}" @click="changeActiveTab('reminders')">{{ lang('reminders') }}</span>
+        <span :class="{active: activeTab == 'sync-log'}" @click="changeActiveTab('sync-log')">Sync log</span>
         <span :class="{active: activeTab == 'error'}" @click="changeActiveTab('error')">Error</span>
       </div>
 
@@ -18,6 +19,46 @@
       <backup v-if="activeTab == 'backup'"></backup>
       <refresh v-if="activeTab == 'refresh'"></refresh>
       <reminders v-if="activeTab == 'reminders'"></reminders>
+      <div class="settings-box sync-log-box" v-if="activeTab == 'sync-log'">
+        <span class="loader fullsize-loader" v-if="syncLogLoading"><i></i></span>
+
+        <div v-if=" ! syncLogLoading">
+          <h2>Sync log</h2>
+          <p v-if=" ! syncLogItems.length">No sync events yet.</p>
+
+          <div class="sync-log-table-wrap" v-if="syncLogItems.length">
+            <table class="sync-log-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Status</th>
+                  <th>Series</th>
+                  <th>Episode</th>
+                  <th>Progress</th>
+                  <th>Message</th>
+                  <th>When</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="item in syncLogItems"
+                  :key="item.id"
+                  :class="{'sync-log-row-actionable': !!item.series_title}"
+                  @click="handleSyncLogRowClick(item)"
+                >
+                  <td>{{ item.id }}</td>
+                  <td><span class="sync-status" :class="statusClass(item.status)">{{ item.status }}</span></td>
+                  <td>{{ item.series_title || '-' }}</td>
+                  <td>S{{ item.season_number || '?' }}E{{ item.episode_number || '?' }}</td>
+                  <td>{{ item.progress !== null ? item.progress + '%' : '-' }}</td>
+                  <td>{{ item.message || '-' }}</td>
+                  <td>{{ item.created_at || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       <div class="settings-box error-box" v-if="activeTab == 'error'">
         <span class="loader fullsize-loader" v-if="errorLoading"><i></i></span>
 
@@ -68,7 +109,9 @@
         activeTab: 'backup',
         errorLoading: false,
         importStatus: {},
-        importLogUrl: ''
+        importLogUrl: '',
+        syncLogLoading: false,
+        syncLogItems: []
       }
     },
 
@@ -87,10 +130,14 @@
         if(tab === 'error') {
           this.fetchImportError();
         }
+
+        if(tab === 'sync-log') {
+          this.fetchSyncLog();
+        }
       },
 
       setActiveTabFromRoute() {
-        const availableTabs = ['backup', 'user', 'options', 'refresh', 'reminders', 'error'];
+        const availableTabs = ['backup', 'user', 'options', 'refresh', 'reminders', 'sync-log', 'error'];
         const requestedTab = this.$route.query.tab;
 
         if(availableTabs.includes(requestedTab)) {
@@ -126,6 +173,92 @@
         }).catch(() => {
           alert('Could not clear import error.');
         });
+      },
+
+      fetchSyncLog() {
+        this.syncLogLoading = true;
+
+        fetch(`${config.api}/external/progress-events`, {credentials: 'same-origin'}).then(response => {
+          return response.json();
+        }).then(response => {
+          this.syncLogItems = response.data || [];
+          this.syncLogLoading = false;
+        }).catch(() => {
+          this.syncLogItems = [];
+          this.syncLogLoading = false;
+        });
+      },
+
+      handleSyncLogRowClick(item) {
+        if( ! item.series_title) {
+          return;
+        }
+
+        const existingOverride = item.override || {};
+        const familyTitle = window.prompt(
+          'Applica questa regola a tutti i titoli simili con questa radice',
+          existingOverride.family_series_title || item.suggested_family_title || item.series_title
+        );
+
+        if(familyTitle === null) {
+          return;
+        }
+
+        const tmdbId = window.prompt(`TMDb ID per "${item.series_title}"`, existingOverride.tmdb_id || item.tmdb_id || '');
+
+        if(tmdbId === null) {
+          return;
+        }
+
+        const forceSeasonDefault = existingOverride.force_season !== null && existingOverride.force_season !== undefined
+          ? existingOverride.force_season
+          : (item.season_number || '');
+        const forceSeason = window.prompt('Use this season instead (vuoto = lascia originale)', forceSeasonDefault);
+
+        if(forceSeason === null) {
+          return;
+        }
+
+        const episodeShift = window.prompt(
+          'Episode shift (es: 28 per far partire E1 da E29)',
+          existingOverride.episode_shift !== undefined && existingOverride.episode_shift !== null ? existingOverride.episode_shift : '0'
+        );
+
+        if(episodeShift === null) {
+          return;
+        }
+
+        fetch(`${config.api}/external/progress-events/${item.id}/override`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('#token').getAttribute('content')
+          },
+          body: JSON.stringify({
+            family_title: familyTitle,
+            tmdb_id: Number(tmdbId),
+            force_season: forceSeason === '' ? null : Number(forceSeason),
+            episode_shift: Number(episodeShift || 0)
+          })
+        }).then(response => {
+          return response.json().then(data => ({ok: response.ok, data}));
+        }).then(result => {
+          if(!result.ok || !result.data.ok) {
+            throw new Error(result.data.message || 'Could not save override.');
+          }
+
+          const reappliedCount = result.data.reappliedCount || 0;
+          const message = result.data.message || 'Override saved.';
+          alert(reappliedCount ? `${message} Riapplicata a ${reappliedCount} eventi simili.` : message);
+          this.fetchSyncLog();
+        }).catch(error => {
+          alert(error.message || 'Could not save override.');
+        });
+      },
+
+      statusClass(status) {
+        return status ? `status-${status}` : '';
       }
     },
 
