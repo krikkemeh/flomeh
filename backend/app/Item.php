@@ -31,6 +31,7 @@
      */
     protected $casts = [
       'watchlist' => 'boolean',
+      'watching_now' => 'boolean',
     ];
     
     /**
@@ -161,10 +162,10 @@
     public function latestEpisode()
     {
       return $this->hasOne(Episode::class, 'tmdb_id', 'tmdb_id')
-        ->orderBy('season_number', 'asc')
-        ->orderBy('episode_number', 'asc')
         ->where('seen', false)
-        ->latest();
+        ->afterLatestSeenProgress()
+        ->orderBy('season_number', 'asc')
+        ->orderBy('episode_number', 'asc');
     }
 
     /**

@@ -54,8 +54,8 @@
 
     private function createUser()
     {
-      $username = $this->ask('Enter your admin username', $this->argument("username"));
-      $password = $this->ask('Enter your admin password', $this->argument("password"));
+      $username = $this->argument("username") ?: $this->ask('Enter your admin username');
+      $password = $this->argument("password") ?: $this->ask('Enter your admin password');
 
       if($this->option('fresh')) {
         LaravelDB::table('users')->delete();

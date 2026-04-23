@@ -3,7 +3,7 @@
     <span class="top-bar"></span>
     <div class="login-wrap">
 
-      <img src="../../../public/assets/img/logo-login.png" class="logo-login" alt="Flox" width="108" height="32">
+      <img src="../../../public/assets/img/logo-login.png" class="logo-login" alt="Flomeh" width="108" height="32">
 
       <form class="login-form" @submit.prevent="login()">
         <input type="text" :placeholder="lang('username')" v-model="username" autofocus>

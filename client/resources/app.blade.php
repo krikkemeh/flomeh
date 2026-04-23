@@ -6,14 +6,14 @@
   <meta id="token" content="{{ csrf_token() }}">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
 
-  <title>Flox</title>
-  <link rel="stylesheet" href="{{ url('assets/app.css') }}">
-  <link href="{{ url('assets/favicon.ico?v=3') }}" rel="icon" type="image/x-icon">
+  <title>FloMeh</title>
+  <link rel="stylesheet" href="{{ rtrim(config('app.url'), '/') }}/assets/app.css?v=4">
+  <link href="{{ rtrim(config('app.url'), '/') }}/assets/favicon.ico?v=4" rel="icon" type="image/x-icon">
 
 </head>
 <body
   data-env="{{ config('app.env') }}"
-  data-url="{{ url('/') }}"
+  data-url="{{ rtrim(config('app.url'), '/') }}"
   data-uri="{{ config('app.CLIENT_URI') }}"
   data-poster-tmdb="{{ config('services.tmdb.poster') }}"
   data-poster-subpage-tmdb="{{ config('services.tmdb.poster_subpage') }}"
@@ -24,7 +24,7 @@
 >
 
   <div id="app">
-    @if(Request::is('login'))
+    @if(Request::is('login') || Request::is(trim(config('app.CLIENT_URI'), '/') . '/login'))
       <login></login>
     @else
       <modal></modal>
@@ -34,8 +34,8 @@
     @endif
   </div>
 
-  <script src="{{ url('assets/vendor.js') }}"></script>
-  <script src="{{ url('assets/app.js') }}"></script>
+  <script src="{{ rtrim(config('app.url'), '/') }}/assets/vendor.js"></script>
+  <script src="{{ rtrim(config('app.url'), '/') }}/assets/app.js?v=4"></script>
 
 </body>
 </html>

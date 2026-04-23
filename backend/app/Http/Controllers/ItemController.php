@@ -21,7 +21,13 @@
 
     public function items($type, $orderBy, $sortDirection)
     {
-      return $this->itemService->getWithPagination($type, $orderBy, $sortDirection);
+      return $this->itemService->getWithPagination(
+        $type,
+        $orderBy,
+        $sortDirection,
+        filter_var(Request::input('include_not_watching'), FILTER_VALIDATE_BOOLEAN),
+        filter_var(Request::input('include_completed'), FILTER_VALIDATE_BOOLEAN)
+      );
     }
 
     public function episodes($tmdbId)
@@ -37,6 +43,11 @@
     public function changeRating($itemId)
     {
       return $this->itemService->changeRating($itemId, Request::input('rating'));
+    }
+
+    public function toggleWatchingNow($itemId)
+    {
+      return $this->itemService->toggleWatchingNow($itemId);
     }
 
     public function add()
@@ -61,6 +72,17 @@
     public function refresh($itemId)
     {
       $this->itemService->refresh($itemId);
+
+      return response([], Response::HTTP_OK);
+    }
+
+    public function manualTmdbUpdate($itemId)
+    {
+      $tmdbId = Request::input('tmdb_id');
+
+      if( ! $this->itemService->manualTmdbUpdate($itemId, $tmdbId)) {
+        return response('Could not update this item with the provided TMDb ID.', Response::HTTP_UNPROCESSABLE_ENTITY);
+      }
 
       return response([], Response::HTTP_OK);
     }

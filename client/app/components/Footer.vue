@@ -10,12 +10,16 @@
 
       <span class="footer-actions">
         <span :title="lang('change color')" class="icon-constrast"  @click="toggleColorScheme()"><i></i></span>
-        <a class="icon-github" href="https://github.com/devfake/flox" target="_blank"></a>
+        <a class="icon-github" href="https://github.com/krikkemeh/flomeh" target="_blank"></a>
       </span>
 
       <div class="sub-links">
         <a v-if="auth" :href="settings" class="login-btn">{{ lang('settings') }}</a>
         <a v-if="auth" :href="logout" class="login-btn">{{ lang('logout') }}</a>
+        <span v-if="auth && importStatusError" class="pending-jobs">
+          Error: <a :href="importLogUrl" target="_blank">log</a>
+        </span>
+        <span v-else-if="auth && pendingImportJobs > 0" class="pending-jobs">Pending jobs...</span>
         <a v-if=" ! auth" :href="login" class="login-btn">Login</a>
       </div>
     </div>
@@ -25,6 +29,7 @@
 <script>
   import { mapState, mapActions } from 'vuex';
   import MiscHelper from '../helpers/misc';
+  import http from 'axios';
 
   export default {
     mixins: [MiscHelper],
@@ -35,7 +40,11 @@
         auth: config.auth,
         logout: config.api + '/logout',
         login: config.url + '/login',
-        settings: config.url + '/settings'
+        settings: config.url + '/settings',
+        pendingImportJobs: 0,
+        importStatusError: false,
+        importLogUrl: '',
+        pendingJobsTimer: null
       }
     },
 
@@ -48,6 +57,17 @@
     
     created() {
       this.disableFooter();
+      this.fetchPendingJobs();
+
+      if(this.auth) {
+        this.pendingJobsTimer = setInterval(this.fetchPendingJobs, 5000);
+      }
+    },
+
+    destroyed() {
+      if(this.pendingJobsTimer) {
+        clearInterval(this.pendingJobsTimer);
+      }
     },
 
     methods: {
@@ -61,6 +81,20 @@
       
       disableFooter() {
         this.hideFooter = this.$route.name === 'calendar';
+      },
+
+      fetchPendingJobs() {
+        if( ! this.auth) {
+          return;
+        }
+
+        http(`${config.api}/import-jobs/pending`).then(response => {
+          const status = response.data.status || {};
+
+          this.pendingImportJobs = response.data.pending || 0;
+          this.importStatusError = !! status.failed;
+          this.importLogUrl = response.data.log_url || '';
+        });
       }
     },
 

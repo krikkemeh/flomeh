@@ -18,6 +18,11 @@ export default new Vuex.Store({
     ],
     showFilters: false,
     items: [],
+    itemGroups: {
+      watching: 0,
+      not_watching: 0,
+      completed: 0
+    },
     searchTitle: '',
     userFilter: '',
     userSortDirection: '',

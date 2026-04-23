@@ -1,0 +1,21 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Keep local source and configuration files private when Laragon serves
+  # the project root instead of the Laravel public directory.
+  RewriteRule ^(backend|client|bin)(/|$) - [F,L]
+  RewriteRule ^(\.env|composer\.(json|lock)|package(-lock)?\.json)$ - [F,L]
+
+  RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+  # Serve compiled assets from Laravel's public directory, regardless of
+  # whether this folder is named flox, flomeh or anything else.
+  RewriteCond public/$1 -f [OR]
+  RewriteCond public/$1 -d
+  RewriteRule ^(.*)$ public/$1 [L]
+
+  # Send every application route to Laravel.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ public/index.php [L]
+</IfModule>

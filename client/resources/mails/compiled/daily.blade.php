@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
-  <title> Flox </title>
+  <title> Flomeh </title>
   <!--[if !mso]><!-- -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!--<![endif]-->
@@ -294,7 +294,7 @@
                 <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                   <tr>
                     <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      <div style="font-family:Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:gray;"> No longer want to receive these emails? Change your <a class="link" target="_blank" href="{{ url('/settings') }}">settings</a> in flox. </div>
+                      <div style="font-family:Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:gray;"> No longer want to receive these emails? Change your <a class="link" target="_blank" href="{{ url('/settings') }}">settings</a> in Flomeh. </div>
                     </td>
                   </tr>
                 </table>

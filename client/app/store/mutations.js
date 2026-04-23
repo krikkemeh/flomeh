@@ -17,6 +17,10 @@ export default {
     state.items = items;
   },
 
+  [type.SET_ITEM_GROUPS](state, groups) {
+    state.itemGroups = groups;
+  },
+
   [type.PUSH_TO_ITEMS](state, items) {
     state.items.push(...items);
   },

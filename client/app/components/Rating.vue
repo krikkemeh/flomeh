@@ -21,6 +21,7 @@
 
   const ratingMilliseconds = 700;
   const newItemMilliseconds = 200;
+  const ratingCycle = [4, 1, 2, 3, 0];
 
   export default {
     props: ['item', 'set-item', 'rated', 'set-rated'],
@@ -46,10 +47,11 @@
       changeRating() {
         if(this.auth) {
           if(this.item.watchlist) {
-            this.rating = 0;
+            this.item.rating = 0;
           } else {
             this.prevRating = this.item.rating;
-            this.item.rating = this.prevRating == 3 ? 1 : +this.prevRating + 1; 
+            const currentIndex = ratingCycle.indexOf(+this.prevRating);
+            this.item.rating = ratingCycle[(currentIndex + 1) % ratingCycle.length];
           }
           
           this.item.watchlist = false;

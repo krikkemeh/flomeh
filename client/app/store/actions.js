@@ -2,11 +2,19 @@ import http from 'axios';
 
 export function loadItems({state, commit}, response) {
   commit('SET_LOADING', true);
-  http(`${config.api}/items/${response.name}/${state.userFilter}/${state.userSortDirection}`).then(value => {
-    const {data, next_page_url} = value.data;
+  const orderBy = state.userFilter || 'last seen';
+  const sortDirection = state.userSortDirection || 'desc';
+  const params = {
+    include_not_watching: response.includeNotWatching ? 1 : 0,
+    include_completed: response.includeCompleted ? 1 : 0
+  };
+
+  http(`${config.api}/items/${response.name}/${orderBy}/${sortDirection}`, {params}).then(value => {
+    const {data, next_page_url, groups} = value.data;
 
     commit('SET_ITEMS', data);
     commit('SET_PAGINATOR', next_page_url);
+    commit('SET_ITEM_GROUPS', groups || {watching: 0, not_watching: 0, completed: 0});
 
     setTimeout(() => {
       commit('SET_LOADING', false);
@@ -47,9 +55,9 @@ export function setColorScheme({commit}, color) {
 
 export function setPageTitle({}, title = null) {
   if( ! title) {
-    document.title = 'Flox';
+    document.title = 'FloMeh';
   } else {
-    document.title = `${title} - Flox`;
+    document.title = `${title} - FloMeh`;
   }
 }
 

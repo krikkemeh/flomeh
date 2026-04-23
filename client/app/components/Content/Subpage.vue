@@ -16,7 +16,7 @@
                     <i class="icon-suggest"></i>
                   </router-link>
                   <span class="is-on-watchlist" :title="lang('add to watchlist')"
-                        v-if="item.rating == null && auth && ! rated" @click="addToWatchlist(item)">
+                        v-if="item.rating == null && ! item.watchlist && auth && ! rated" @click="addToWatchlist(item)">
                     <i class="icon-watchlist"></i>
                   </span>
                       <span class="is-on-watchlist" :title="lang('remove from watchlist')"
@@ -62,8 +62,8 @@
                   Apple TV+
                 </a>
                 <span @click="openTrailer()" v-if="item.youtube_key" class="button-trailer"><i class="icon-trailer"></i> {{ lang('watch trailer') }}</span>
-                <!--                <span class="button-watchlist" v-if="item.rating == null && auth && ! rated" @click="addToWatchlist(item)"><i class="icon-watchlist"></i> {{ lang('add to watchlist') }}</span>-->
-                <!--                <span class="button-watchlist" v-if="item.watchlist && auth && ! rated" @click="removeItem()"><i class="icon-watchlist-remove"></i> {{ lang('remove from watchlist') }}</span>-->
+                <span class="button-watchlist" v-if="item.rating == null && ! item.watchlist && auth && ! rated" @click="addToWatchlist(item)"><i class="icon-watchlist"></i> {{ lang('add to watchlist') }}</span>
+                <span class="button-watchlist" v-if="item.watchlist && auth && ! rated" @click="removeItem()"><i class="icon-watchlist-remove"></i> {{ lang('remove from watchlist') }}</span>
                 <a :href="`https://www.themoviedb.org/${item.media_type}/${item.tmdb_id}`" target="_blank"
                    class="button-tmdb-rating">
                   <i v-if="item.tmdb_rating && item.tmdb_rating != 0"><b>{{ item.tmdb_rating }}</b> TMDb</i>
@@ -97,7 +97,7 @@
                 <i class="icon-suggest"></i>
               </router-link>
               <span class="is-on-watchlist" :title="lang('add to watchlist')"
-                    v-if="item.rating == null && auth && ! rated" @click="addToWatchlist(item)">
+                    v-if="item.rating == null && ! item.watchlist && auth && ! rated" @click="addToWatchlist(item)">
                 <i class="icon-watchlist"></i>
               </span>
               <span class="is-on-watchlist" :title="lang('remove from watchlist')"
@@ -128,6 +128,7 @@
           <!-- todo: move to own component -->
           <div class="subpage-sidebar-buttons no-select" v-if="item.rating != null && auth">
             <span class="refresh-infos" @click="refreshInfos()">{{ lang('refresh infos') }}</span>
+            <span class="edit-data" @click="manualTmdbUpdate()">Manual TMDb update</span>
             <span class="remove-item" @click="removeItem()" v-if=" ! item.watchlist">{{ lang('delete item') }}</span>
           </div>
         </div>
@@ -318,6 +319,24 @@
           location.reload();
         }, error => {
           alert(error);
+          this.SET_LOADING(false);
+        })
+      },
+
+      manualTmdbUpdate() {
+        const tmdbId = window.prompt('New TMDb ID', this.item.tmdb_id || '');
+
+        if( ! tmdbId) {
+          return;
+        }
+
+        this.SET_LOADING(true);
+        this.SET_ITEM_LOADED_SUBPAGE(false);
+
+        http.patch(`${config.api}/manual-tmdb-update/${this.item.id}`, {tmdb_id: tmdbId}).then(response => {
+          location.reload();
+        }, error => {
+          alert(error.response ? error.response.data : error);
           this.SET_LOADING(false);
         })
       }

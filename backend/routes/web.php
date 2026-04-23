@@ -1,6 +1,7 @@
 <?php
 
-  Route::prefix('api')->group(function() {
+  $registerRoutes = function() {
+    Route::prefix('api')->group(function() {
     Route::get('/logout', 'UserController@logout');
     Route::post('/login', 'UserController@login');
 
@@ -27,6 +28,11 @@
       Route::post('plex', 'ApiController@plex');
     });
 
+    Route::middleware('external_progress_token')->group(function() {
+      Route::post('/external/progress', 'ExternalProgressController@store');
+      Route::post('/external/progress/next', 'ExternalProgressController@next');
+    });
+
     Route::middleware('auth')->group(function() {
       Route::get('/check-update', 'SettingController@checkForUpdate');
       Route::get('/version', 'SettingController@getVersion');
@@ -44,7 +50,9 @@
       Route::patch('/toggle-episode/{id}', 'ItemController@toggleEpisode');
       Route::patch('/toggle-season', 'ItemController@toggleSeason');
       Route::patch('/change-rating/{itemId}', 'ItemController@changeRating');
+      Route::patch('/watching-now/{itemId}', 'ItemController@toggleWatchingNow');
       Route::patch('/refresh/{itemId}', 'ItemController@refresh');
+      Route::patch('/manual-tmdb-update/{itemId}', 'ItemController@manualTmdbUpdate');
       Route::delete('/remove/{itemId}', 'ItemController@remove')->middleware('csrf');
 
       Route::get('/userdata', 'UserController@getUserData');
@@ -54,8 +62,28 @@
 
       Route::post('/fetch-files', 'FileParserController@call');
 
+      Route::get('/export', 'ExportImportController@export');
+      Route::get('/export-progress-csv', 'ExportImportController@exportProgressCsv');
+      Route::post('/import', 'ExportImportController@import');
+      Route::post('/import-add', 'ExportImportController@importAdd');
+      Route::post('/import-ai-format', 'ExportImportController@importAiFormat');
+      Route::get('/external/progress-events', 'ExternalProgressController@index');
+      Route::post('/external/progress-events/{eventId}/override', 'ExternalProgressController@storeOverride');
+      Route::get('/import-jobs/pending', 'ExportImportController@pendingImportJobs');
+      Route::get('/import-jobs/log/{date?}', 'ExportImportController@importLog');
+      Route::patch('/import-jobs/clear-error', 'ExportImportController@clearImportError');
+
       Route::get('/video/{type}/{id}', 'VideoController@serve');
     });
-  });
+    });
 
-  Route::fallback('HomeController@app');
+    Route::get('/{any?}', 'HomeController@app')->where('any', '.*');
+  };
+
+  $clientUriPrefix = trim(config('app.CLIENT_URI'), '/');
+
+  if($clientUriPrefix) {
+    Route::prefix($clientUriPrefix)->group($registerRoutes);
+  }
+
+  $registerRoutes();

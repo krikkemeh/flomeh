@@ -26,19 +26,22 @@
 
     private function fillDatabaseCredentials()
     {
-      $value = $this->ask('Enter your Database Name', $this->argument("database"));
+      $value = $this->argument("database") ?: $this->ask('Enter your Database Name');
       $this->changeENV('DB_DATABASE', $value);
 
-      $value = $this->ask('Enter your Database Username', $this->argument("username"));
+      $value = $this->argument("username") ?: $this->ask('Enter your Database Username');
       $this->changeENV('DB_USERNAME', $value);
 
-      $value = $this->ask('Enter your Database Password', $this->argument("password"));
+      $value = $this->argument("password");
+      if($value === null) {
+        $value = $this->ask('Enter your Database Password');
+      }
       $this->changeENV('DB_PASSWORD', $value);
 
-      $value = $this->ask('Enter your Database Hostname', $this->argument("hostname"));
+      $value = $this->argument("hostname") ?: $this->ask('Enter your Database Hostname');
       $this->changeENV('DB_HOST', $value);
 
-      $value = $this->ask('Enter your Database Port', $this->argument("port"));
+      $value = $this->argument("port") ?: $this->ask('Enter your Database Port');
       $this->changeENV('DB_PORT', $value);
     }
 
