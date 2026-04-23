@@ -9,7 +9,7 @@ Questa versione e' stata adattata per un uso locale con Laragon e aggiunge alcun
 - import piu' prudente, senza ridurre il progresso gia' salvato nel database;
 - setup Windows/Laragon semplificato.
 
-![flox](./public/assets/screenshot.jpg)
+![flomeh](./public/assets/flomeh.PNG)
 
 ## Requisiti
 
