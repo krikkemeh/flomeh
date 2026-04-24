@@ -4,8 +4,8 @@
       <div class="content-tools no-select">
         <div class="sort-wrap">
           <div class="sort-direction" @click="setUserSortDirection()">
-            <i v-if="userSortDirection == 'asc'">&#8593;</i>
-            <i v-if="userSortDirection == 'desc'">&#8595;</i>
+            <i v-if="userSortDirection == 'asc'" class="sort-arrow sort-arrow-up"></i>
+            <i v-if="userSortDirection == 'desc'" class="sort-arrow sort-arrow-down"></i>
           </div>
           <div class="filter-wrap">
             <span class="current-filter" @click="toggleShowFilters()">{{ lang(userFilter) }} <span class="arrow-down"></span></span>

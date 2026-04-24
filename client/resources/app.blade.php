@@ -7,8 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
 
   <title>FloMeh</title>
-  <link rel="stylesheet" href="{{ rtrim(config('app.url'), '/') }}/assets/app.css?v=5">
-  <link href="{{ rtrim(config('app.url'), '/') }}/assets/favicon.ico?v=5" rel="icon" type="image/x-icon">
+  <link rel="stylesheet" href="{{ rtrim(config('app.url'), '/') }}/assets/app.css?v=6">
+  <link href="{{ rtrim(config('app.url'), '/') }}/assets/favicon.ico?v=6" rel="icon" type="image/x-icon">
 
 </head>
 <body
@@ -35,7 +35,7 @@
   </div>
 
   <script src="{{ rtrim(config('app.url'), '/') }}/assets/vendor.js"></script>
-  <script src="{{ rtrim(config('app.url'), '/') }}/assets/app.js?v=5"></script>
+  <script src="{{ rtrim(config('app.url'), '/') }}/assets/app.js?v=6"></script>
 
 </body>
 </html>

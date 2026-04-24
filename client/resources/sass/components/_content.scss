@@ -923,6 +923,23 @@ main {
   }
 }
 
+.sort-arrow {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-top: 8px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
+.sort-arrow-up {
+  border-bottom: 7px solid currentColor;
+}
+
+.sort-arrow-down {
+  border-top: 7px solid currentColor;
+}
+
 .filter-wrap {
   float: left;
   cursor: pointer;
