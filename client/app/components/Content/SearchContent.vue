@@ -75,14 +75,12 @@
       },
 
       async searchTMDB() {
-        if(config.auth) {
-          await http(`${config.api}/search-tmdb?q=${this.searchTitle}`).then(value => {
-            const floxItems = this.floxItems.map(item => item.tmdb_id);
-            this.tmdbItems = value.data.filter(item => ! floxItems.includes(item.tmdb_id));
-          }).catch(error => {
-            alert('Error in searchTMDB(): ' + error);
-          });
-        }
+        await http(`${config.api}/search-tmdb?q=${this.searchTitle}`).then(value => {
+          const floxItems = this.floxItems.map(item => item.tmdb_id);
+          this.tmdbItems = value.data.filter(item => ! floxItems.includes(item.tmdb_id));
+        }).catch(error => {
+          alert('Error in searchTMDB(): ' + error);
+        });
       }
     },
 

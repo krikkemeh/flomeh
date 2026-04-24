@@ -57,9 +57,6 @@
 
       Route::get('/userdata', 'UserController@getUserData');
       Route::patch('/userdata', 'UserController@changeUserData')->middleware('csrf');
-
-      Route::get('/search-tmdb', 'TMDBController@search');
-
       Route::post('/fetch-files', 'FileParserController@call');
 
       Route::get('/export', 'ExportImportController@export');
@@ -75,6 +72,8 @@
 
       Route::get('/video/{type}/{id}', 'VideoController@serve');
     });
+
+    Route::get('/search-tmdb', 'TMDBController@search');
     });
 
     Route::get('/{any?}', 'HomeController@app')->where('any', '.*');
