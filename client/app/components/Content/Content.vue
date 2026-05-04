@@ -91,11 +91,11 @@
       }),
 
       watchingItems() {
-        return this.items.filter(item => ! this.isCompletedItem(item) && item.watching_now);
+        return this.items.filter(item => item.media_type !== 'movie' && ! this.isCompletedItem(item) && item.watching_now);
       },
 
       notWatchingItems() {
-        return this.items.filter(item => ! this.isCompletedItem(item) && ! item.watching_now);
+        return this.items.filter(item => ! this.isCompletedItem(item) && (item.media_type === 'movie' || ! item.watching_now));
       },
 
       completedItems() {
@@ -223,7 +223,7 @@
           return item.rating !== null && item.tmdb_id && ! item.latest_episode;
         }
 
-        return item.media_type === 'movie' && item.rating !== null && item.rating != 0;
+        return item.media_type === 'movie' && !!item.watched;
       },
 
       setUserFilter(filter) {

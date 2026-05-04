@@ -28,7 +28,7 @@
 
         <!--<span v-if="auth && localItem.rating == null && ! rated" class="add-to-watchlist" @click="addToWatchlist(localItem)">{{ lang('add to watchlist') }}</span>-->
         <!--<span v-if="auth && localItem.watchlist && ! rated" class="remove-from-watchlist" @click="removeItem()">{{ lang('remove from watchlist') }}</span>-->
-        <span v-if="auth && ! rated"
+        <span v-if="auth && ! rated && localItem.media_type !== 'movie'"
               class="watching-now-toggle"
               :class="{active: localItem.watching_now}"
               title="Watching now"
@@ -97,10 +97,6 @@
       },
 
       poster() {
-        if(this.localItem.rating) {
-          return config.poster + this.localItem.poster;
-        }
-
         return config.posterTMDB + this.localItem.poster;
       },
 

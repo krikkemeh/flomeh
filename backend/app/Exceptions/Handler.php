@@ -69,6 +69,6 @@ class Handler extends ExceptionHandler
             return response()->json(['error' => 'Unauthenticated.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        return redirect()->guest('login');
+        return redirect()->to(rtrim(config('app.url'), '/') . '/login');
     }
 }

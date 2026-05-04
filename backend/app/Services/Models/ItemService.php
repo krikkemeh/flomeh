@@ -441,13 +441,17 @@
       $items->where(function($query) use ($includeNotWatching, $includeCompleted) {
         $query->where(function($query) {
           $this->whereActive($query);
-          $query->where('watching_now', true);
+          $query->where('watching_now', true)
+            ->where('media_type', '<>', 'movie');
         });
 
         if($includeNotWatching) {
           $query->orWhere(function($query) {
             $this->whereActive($query);
-            $query->where('watching_now', false);
+            $query->where(function($query) {
+              $query->where('media_type', 'movie')
+                ->orWhere('watching_now', false);
+            });
           });
         }
 
@@ -472,11 +476,15 @@
       return [
         'watching' => $this->itemsQuery($type)->where(function($query) {
           $this->whereActive($query);
-          $query->where('watching_now', true);
+          $query->where('watching_now', true)
+            ->where('media_type', '<>', 'movie');
         })->count(),
         'not_watching' => $this->itemsQuery($type)->where(function($query) {
           $this->whereActive($query);
-          $query->where('watching_now', false);
+          $query->where(function($query) {
+            $query->where('media_type', 'movie')
+              ->orWhere('watching_now', false);
+          });
         })->count(),
         'completed' => $this->itemsQuery($type)->where(function($query) {
           $this->whereCompleted($query);
@@ -489,10 +497,7 @@
       return $query->where(function($query) {
         $query->where(function($query) {
           $query->where('media_type', 'movie')
-            ->where(function($query) {
-              $query->whereNull('rating')
-                ->orWhere('rating', 0);
-            });
+            ->where('watched', false);
         })->orWhere(function($query) {
           $query->where('media_type', 'tv')
             ->where(function($query) {
@@ -511,8 +516,7 @@
       return $query->where('watchlist', false)->where(function($query) {
         $query->where(function($query) {
           $query->where('media_type', 'movie')
-            ->whereNotNull('rating')
-            ->where('rating', '<>', 0);
+            ->where('watched', true);
         })->orWhere(function($query) {
           $query->where('media_type', 'tv')
             ->whereNotNull('rating')
@@ -545,6 +549,8 @@
       $item->update([
         'rating' => $rating,
         'watchlist' => false,
+        'watched' => $item->media_type == 'movie' ? true : $item->watched,
+        'watching_now' => $item->media_type == 'movie' ? false : $item->watching_now,
       ]);
     }
 
@@ -554,6 +560,12 @@
 
       if( ! $item) {
         return response('Not Found', Response::HTTP_NOT_FOUND);
+      }
+
+      if($item->media_type == 'movie') {
+        $item->update(['watching_now' => false]);
+
+        return $item->fresh();
       }
 
       $item->update([
@@ -690,14 +702,15 @@
     {
       $now = now()->toDateTimeString();
 
+      $item['watchlist'] = $item['watchlist'] ?? false;
       $item['poster'] = $item['poster'] ?? '';
       $item['title'] = $item['title'] ?? $item['original_title'] ?? $item['fp_name'] ?? '';
       $item['original_title'] = $item['original_title'] ?? $item['title'];
       $item['media_type'] = $item['media_type'] ?? 'movie';
-      $item['rating'] = $item['rating'] ?? ($item['media_type'] == 'movie' ? 1 : 0);
+      $item['rating'] = $item['rating'] ?? 0;
+      $item['watched'] = $item['watched'] ?? ($item['media_type'] == 'movie' ? ! $item['watchlist'] : false);
       $item['released'] = $item['released'] ?? 0;
       $item['released_timestamp'] = $item['released_timestamp'] ?? null;
-      $item['watchlist'] = $item['watchlist'] ?? false;
       $item['created_at'] = $item['created_at'] ?? $now;
       $item['updated_at'] = $item['updated_at'] ?? $now;
       $item['last_seen_at'] = $item['last_seen_at'] ?? $now;

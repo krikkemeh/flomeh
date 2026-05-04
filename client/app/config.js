@@ -18,6 +18,14 @@ const config = {
   api: url + '/api'
 };
 
+http.interceptors.response.use(response => response, error => {
+  if(error && error.response && error.response.status === 401) {
+    window.location.replace(url + '/login');
+  }
+
+  return Promise.reject(error);
+});
+
 window.config = config;
 
 export default config;

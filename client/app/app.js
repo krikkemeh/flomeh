@@ -14,6 +14,7 @@ import SiteFooter from './components/Footer.vue';
 import Login from './components/Login.vue';
 import Modal from './components/Modal/Index.vue';
 
+import config from './config';
 import router from './routes';
 import store from './store';
 
@@ -22,6 +23,24 @@ const App = new Vue({
   router,
 
   created() {
+    const normalizePath = path => {
+      const normalized = (path || '/').replace(/\/+$/, '');
+      return normalized === '' ? '/' : normalized;
+    };
+
+    const loginPath = normalizePath(`${config.uri}/login`);
+    const currentPath = normalizePath(window.location.pathname);
+
+    if( ! config.auth && currentPath !== loginPath) {
+      window.location.replace(`${config.url}/login`);
+      return;
+    }
+
+    if(config.auth && currentPath === loginPath) {
+      window.location.replace(config.url);
+      return;
+    }
+
     this.checkForUserColorScheme();
     this.checkForUserFilter();
     this.checkForUserSortDirection();

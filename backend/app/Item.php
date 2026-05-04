@@ -32,6 +32,7 @@
     protected $casts = [
       'watchlist' => 'boolean',
       'watching_now' => 'boolean',
+      'watched' => 'boolean',
     ];
     
     /**
@@ -73,6 +74,7 @@
         'original_title' => $data['original_title'],
         'poster' => $data['poster'] ?? '',
         'rating' => 0,
+        'watched' => $data['watched'] ?? false,
         'released' => $data['released'],
         'released_timestamp' => Carbon::parse($data['released']),
         'overview' => $data['overview'],
@@ -103,6 +105,7 @@
         'media_type' => $mediaType,
         'poster' => '',
         'rating' => 0,
+        'watched' => false,
         'released' => time(),
         'released_timestamp' => now(),
         'src' => $data['src'],

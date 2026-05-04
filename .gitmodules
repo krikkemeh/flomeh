@@ -1,6 +1,6 @@
 [submodule "flox-file-parser"]
 	path = flox-file-parser
 	url = https://github.com/exane/flox-file-parser
-[submodule "chrome-extension"]
-	path = chrome-extension
+[submodule "flomeh-chrome"]
+	path = flomeh-chrome
 	url = https://github.com/krikkemeh/flomeh-chrome.git

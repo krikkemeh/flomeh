@@ -16,6 +16,7 @@ export default new Router({
   mode: 'history',
   base: config.uri,
   routes: [
+    { path: '/login', component: Content, name: 'login' },
     { path: '/', component: Content, name: 'home' },
 
     // todo: use props for media type

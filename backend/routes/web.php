@@ -2,27 +2,7 @@
 
   $registerRoutes = function() {
     Route::prefix('api')->group(function() {
-    Route::get('/logout', 'UserController@logout');
     Route::post('/login', 'UserController@login');
-
-    Route::get('/episodes/{tmdbId}', 'ItemController@episodes');
-    Route::get('/items/{type}/{orderBy}/{sortDirection}', 'ItemController@items');
-    Route::get('/search-items', 'ItemController@search');
-
-    Route::get('/calendar', 'CalendarController@items');
-
-    Route::get('/item/{tmdbId}/{mediaType}', 'SubpageController@item');
-    Route::get('/imdb-rating/{imdbId}', 'SubpageController@imdbRating');
-
-    Route::get('/suggestions/{tmdbID}/{mediaType}', 'TMDBController@suggestions');
-    Route::get('/genres', 'GenreController@allGenres');
-    Route::get('/genre/{genre}', 'TMDBController@genre');
-    Route::get('/trending', 'TMDBController@trending');
-    Route::get('/upcoming', 'TMDBController@upcoming');
-    Route::get('/now-playing', 'TMDBController@nowPlaying');
-
-    Route::patch('/refresh-all', 'ItemController@refreshAll');
-    Route::get('/settings', 'SettingController@settings');
 
     Route::middleware('api_key')->group(function() {
       Route::post('plex', 'ApiController@plex');
@@ -34,6 +14,21 @@
     });
 
     Route::middleware('auth')->group(function() {
+      Route::get('/logout', 'UserController@logout');
+      Route::get('/episodes/{tmdbId}', 'ItemController@episodes');
+      Route::get('/items/{type}/{orderBy}/{sortDirection}', 'ItemController@items');
+      Route::get('/search-items', 'ItemController@search');
+      Route::get('/calendar', 'CalendarController@items');
+      Route::get('/item/{tmdbId}/{mediaType}', 'SubpageController@item');
+      Route::get('/imdb-rating/{imdbId}', 'SubpageController@imdbRating');
+      Route::get('/suggestions/{tmdbID}/{mediaType}', 'TMDBController@suggestions');
+      Route::get('/genres', 'GenreController@allGenres');
+      Route::get('/genre/{genre}', 'TMDBController@genre');
+      Route::get('/trending', 'TMDBController@trending');
+      Route::get('/upcoming', 'TMDBController@upcoming');
+      Route::get('/now-playing', 'TMDBController@nowPlaying');
+      Route::patch('/refresh-all', 'ItemController@refreshAll');
+      Route::get('/settings', 'SettingController@settings');
       Route::get('/check-update', 'SettingController@checkForUpdate');
       Route::get('/version', 'SettingController@getVersion');
       Route::get('/api-key', 'SettingController@getApiKey');
@@ -71,11 +66,11 @@
       Route::patch('/import-jobs/clear-error', 'ExportImportController@clearImportError');
 
       Route::get('/video/{type}/{id}', 'VideoController@serve');
+      Route::get('/search-tmdb', 'TMDBController@search');
+    });
     });
 
-    Route::get('/search-tmdb', 'TMDBController@search');
-    });
-
+    Route::view('/privacypolicy', 'privacypolicy');
     Route::get('/{any?}', 'HomeController@app')->where('any', '.*');
   };
 

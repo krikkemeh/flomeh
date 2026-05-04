@@ -80,6 +80,6 @@
     {
       $this->auth->logout();
 
-      return redirect('/');
+      return redirect()->to(rtrim(config('app.url'), '/') . '/login');
     }
   }

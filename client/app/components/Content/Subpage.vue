@@ -187,24 +187,14 @@
       },
 
       backdropImage() {
-        let backdropUrl = config.backdropTMDB;
-
-        if (this.item.rating != null) {
-          backdropUrl = config.backdrop;
-        }
-
         return {
-          backgroundImage: `url(${backdropUrl}${this.item.backdrop})`
+          backgroundImage: `url(${config.backdropTMDB}${this.item.backdrop})`
         }
       },
 
       posterImage() {
         if (!this.item.poster) {
           return this.noImage;
-        }
-
-        if (this.item.rating != null) {
-          return config.posterSubpage + this.item.poster;
         }
 
         return config.posterSubpageTMDB + this.item.poster;

@@ -95,7 +95,7 @@
           return;
         }
 
-        if($item->media_type == 'movie' && ! $item->watchlist && $item->rating != 0) {
+        if($item->media_type == 'movie' && ! $item->watchlist && $item->watched) {
           $rows[] = [
             $item->title,
             '',

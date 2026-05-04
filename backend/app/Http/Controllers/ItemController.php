@@ -59,7 +59,10 @@
     {
       $item = $this->add();
 
-      $item->update(['watchlist' => true]);
+      $item->update([
+        'watchlist' => true,
+        'watched' => $item->media_type == 'movie' ? false : $item->watched,
+      ]);
 
       return $item;
     }
