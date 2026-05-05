@@ -42,13 +42,15 @@ Lo script:
 
 - crea `backend\.env` da `backend\.env.laragon.example` se manca;
 - chiede l'URL dell'app e aggiorna `APP_URL`/`CLIENT_URI`;
+- chiede il nome del database MySQL e aggiorna `DB_DATABASE`;
+- chiede `TMDB_API_KEY`, necessaria per completare le migrazioni iniziali;
 - crea le cartelle scrivibili usate da poster, backdrop, export e cache Laravel;
-- prova a creare il database MySQL `flox` con l'utente Laragon predefinito `root` senza password;
+- prova a creare il database MySQL scelto con l'utente Laragon predefinito `root` senza password;
 - esegue `composer install`;
 - genera `APP_KEY` solo se manca;
 - esegue migrazioni e crea l'utente iniziale sulle nuove installazioni.
 
-4. Apri `backend\.env` e imposta la tua chiave TMDB:
+4. Quando lo script lo chiede, inserisci la tua chiave TMDB. Se devi cambiarla dopo, puoi comunque modificare `backend\.env`:
 
 ```env
 TMDB_API_KEY=la_tua_chiave
@@ -57,7 +59,7 @@ TMDB_API_KEY=la_tua_chiave
 5. Avvia Apache e MySQL da Laragon, poi visita l'URL scelto nello script. Il valore predefinito e':
 
 ```text
-http://localhost/flomeh
+http://localhost/nome-cartella-progetto
 ```
 
 Login iniziale per nuove installazioni:
@@ -87,6 +89,8 @@ php artisan config:clear
 ```
 
 Per dettagli specifici su Laragon vedi [`LARAGON.md`](./LARAGON.md).
+
+Lo script propone anche un `DB_DATABASE` predefinito derivato dal nome della cartella del progetto, cosi' una clone di test non riusa per sbaglio il database di un'altra installazione locale.
 
 ## Installazione manuale
 

@@ -34,14 +34,16 @@ Lo script esegue le operazioni principali:
 - trova PHP 7 e Composer;
 - crea `backend\.env` da `backend\.env.laragon.example` se non esiste;
 - chiede l'URL dell'app e aggiorna `APP_URL`/`CLIENT_URI`;
+- chiede il nome del database MySQL e aggiorna `DB_DATABASE`;
+- chiede `TMDB_API_KEY`, necessaria per completare migrazioni e generi iniziali;
 - crea le cartelle locali usate da cache, poster, backdrop ed export;
-- prova a creare il database MySQL `flox` con `root` senza password;
+- prova a creare il database MySQL scelto con `root` senza password;
 - installa le dipendenze PHP con Composer;
 - genera `APP_KEY` solo se e' vuota;
 - su una nuova installazione esegue migrazioni e crea l'utente `admin / admin`;
 - su un progetto gia' configurato esegue solo le migrazioni, per evitare utenti duplicati.
 
-5. Apri `backend\.env` e inserisci la tua chiave TMDB:
+5. Quando lo script lo chiede, inserisci la tua chiave TMDB. Se devi cambiarla dopo, modifica `backend\.env`:
 
 ```env
 TMDB_API_KEY=la_tua_chiave
@@ -50,7 +52,7 @@ TMDB_API_KEY=la_tua_chiave
 6. Visita:
 
 ```text
-http://localhost/flomeh
+http://localhost/nome-cartella-progetto
 ```
 
 Login iniziale:
@@ -68,10 +70,12 @@ Lo script usa i valori pensati per Laragon:
 ```env
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=flox
+DB_DATABASE=nome_cartella_progetto
 DB_USERNAME=root
 DB_PASSWORD=
 ```
+
+Il nome del database proposto e' derivato dal nome della cartella del progetto, cosi' una clone di test puo' convivere con un'altra installazione locale senza riusare lo stesso DB.
 
 Se MySQL usa credenziali diverse, crea il database manualmente e aggiorna `backend\.env`, poi rilancia:
 
@@ -81,7 +85,7 @@ setup-laragon.bat
 
 ## URL o porta diversa
 
-Lo script propone `http://localhost/flomeh`, ma puoi inserire un URL diverso quando viene richiesto. Per esempio:
+Lo script propone `http://localhost/nome-cartella-progetto`, ma puoi inserire un URL diverso quando viene richiesto. Per esempio:
 
 ```env
 APP_URL=http://localhost:8080/flomeh

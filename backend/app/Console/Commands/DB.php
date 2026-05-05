@@ -33,10 +33,12 @@
         $this->error('Can not connect to the database. Error: ' . $e->getMessage());
         $this->error('Make sure your database credentials in .env are correct');
 
-        return false;
+        return 1;
       }
       
       $this->createUser();
+
+      return 0;
     }
 
     private function createMigrations()
