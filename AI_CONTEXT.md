@@ -1,10 +1,10 @@
-# Flox - Contesto Compatto Per AI
+# Flomeh - Contesto Compatto Per AI
 
-Questo file serve come contesto rapido da fornire a un'AI quando si vogliono chiedere modifiche al progetto Flox installato in locale con Laragon.
+Questo file serve come contesto rapido da fornire a un'AI quando si vogliono chiedere modifiche al progetto Flomeh installato in locale con Laragon.
 
 ## Obiettivo Del Progetto
 
-Flox e' una web app self-hosted per gestire film e serie TV:
+Flomeh e' una web app self-hosted per gestire film e serie TV:
 
 - ricerca e import dei dati da TMDb;
 - libreria personale di film e serie;
@@ -13,19 +13,21 @@ Flox e' una web app self-hosted per gestire film e serie TV:
 - backup/import/export;
 - refresh dei metadati online.
 
-Questa installazione e' stata adattata per funzionare facilmente in locale con Laragon, sotto una sottocartella:
+La copia locale e' pensata per Laragon, sotto una sottocartella:
 
 ```text
-http://localhost:60888/flox/
+http://localhost:60888/flomeh/
 ```
 
 Percorso locale principale:
 
 ```text
-D:\Web\laragon\www\flox
+D:\Web\laragon\www\flomeh
 ```
 
-Nota workspace: se l'AI parte da `D:\TestAI\floxmeh`, quella e' solo la cartella della workspace. Il progetto Flox reale e' il secondo folder della workspace, cioe' `D:\Web\laragon\www\flox`. In quel caso non cercare `flox/AI_CONTEXT.md` dentro `D:\TestAI\floxmeh`, perche' non esiste.
+Nota workspace: se l'AI parte da `D:\TestAI\floxmeh`, quella e' solo la cartella della workspace. Il progetto Flomeh reale e' `D:\Web\laragon\www\flomeh`.
+
+Nota importante: la copia piu' aggiornata e canonica e' quella online su `https://www.armillotta.eu/flomeh/`. La copia Laragon va allineata a quella online, non il contrario.
 
 ## Ambiente Locale
 
@@ -111,7 +113,7 @@ Se si modifica solo `client`, Laragon continuera' a servire il vecchio bundle in
 Controllo utile dopo modifiche a `public/assets/app.js`:
 
 ```bat
-node --check D:\Web\laragon\www\flox\public\assets\app.js
+node --check D:\Web\laragon\www\flomeh\public\assets\app.js
 ```
 
 ## Configurazione Importante In `.env`
@@ -119,7 +121,7 @@ node --check D:\Web\laragon\www\flox\public\assets\app.js
 Valori rilevanti:
 
 ```env
-APP_URL=http://localhost:60888/flox
+APP_URL=http://localhost:60888/flomeh
 DB_DATABASE=flox
 DB_USERNAME=root
 DB_PASSWORD=
@@ -138,7 +140,7 @@ La chiave TMDb da usare e' la API Key classica, non il Read Access Token.
 La app e' stata adattata per partire da:
 
 ```text
-/flox/
+/flomeh/
 ```
 
 e non dalla root del dominio.
@@ -568,7 +570,7 @@ type backend\storage\logs\laravel.log
 ## Prompt Consigliato Da Dare A Una AI
 
 ```text
-Sto lavorando su Flox, una vecchia app Laravel 6 + Vue installata in locale con Laragon in D:\Web\laragon\www\flox e servita da http://localhost:60888/flox/.
+Sto lavorando su Flomeh, una vecchia app Laravel 6 + Vue installata in locale con Laragon in D:\Web\laragon\www\flomeh e servita da http://localhost:60888/flomeh/.
 
 Leggi AI_CONTEXT.md prima di modificare il progetto.
 

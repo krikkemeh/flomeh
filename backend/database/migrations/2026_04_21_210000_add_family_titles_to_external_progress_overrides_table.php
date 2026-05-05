@@ -13,6 +13,8 @@ class AddFamilyTitlesToExternalProgressOverridesTable extends Migration
             return;
         }
 
+        $needsFamilyColumns = ! Schema::hasColumn('external_progress_overrides', 'family_series_title');
+
         Schema::table('external_progress_overrides', function(Blueprint $table) {
             if( ! Schema::hasColumn('external_progress_overrides', 'family_series_title')) {
                 $table->string('family_series_title')->nullable()->after('normalized_external_series_title');
@@ -27,12 +29,12 @@ class AddFamilyTitlesToExternalProgressOverridesTable extends Migration
                 'normalized_family_series_title' => DB::raw('normalized_external_series_title'),
             ]);
 
-        Schema::table('external_progress_overrides', function(Blueprint $table) {
-            if(Schema::hasColumn('external_progress_overrides', 'family_series_title')) {
+        if($needsFamilyColumns) {
+            Schema::table('external_progress_overrides', function(Blueprint $table) {
                 $table->index('family_series_title', 'epo_family_title_idx');
                 $table->index('normalized_family_series_title', 'epo_norm_family_idx');
-            }
-        });
+            });
+        }
     }
 
     public function down()
